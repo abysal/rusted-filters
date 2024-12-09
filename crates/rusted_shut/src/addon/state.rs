@@ -8,9 +8,8 @@ pub struct IntRange(pub Vec<i32>);
 pub enum StateData {
     Boolean(bool),
     IntRange(IntRange),
-    String(Vec<String>)
+    String(Vec<String>),
 }
-
 
 impl<'de> Deserialize<'de> for IntRange {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -18,16 +17,22 @@ impl<'de> Deserialize<'de> for IntRange {
         D: Deserializer<'de>,
     {
         #[derive(Deserialize)]
+        struct MinMaxInternal {
+            pub min: i32,
+            pub max: i32,
+        }
+
+        #[derive(Deserialize)]
         #[serde(untagged)]
         enum RawValueRange {
             Array(Vec<i32>),
-            MinMax { min: i32, max: i32 },
+            MinMax { values: MinMaxInternal },
         }
 
         let raw = RawValueRange::deserialize(deserializer)?;
         let list = match raw {
             RawValueRange::Array(values) => values,
-            RawValueRange::MinMax { min, max } => (min..=max).collect(),
+            RawValueRange::MinMax { values } => (values.min..=values.max).collect(),
         };
         Ok(IntRange(list))
     }

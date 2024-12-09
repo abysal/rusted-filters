@@ -12,7 +12,6 @@ pub enum ComponentError {
     #[error("{0} is not {1}")]
     MemberNotTypeDynamic(String, &'static str),
 
-
     #[error("{0} is not an object")]
     NotObject(&'static str),
     #[error("{0} is not an object")]
@@ -22,8 +21,7 @@ pub enum ComponentError {
     MissingMember(&'static str, &'static str),
 
     #[error(transparent)]
-    JsonError(#[from] serde_json::Error)
-
+    JsonError(#[from] serde_json::Error),
 }
 
 pub trait Component: Any + JsonSerialize + Debug {
@@ -106,11 +104,16 @@ impl FormattedComponentRegister {
     }
 }
 
-
 #[derive(Clone, Debug)]
 pub struct UnknownComponent {
     pub data: Value,
     pub id: String,
+}
+
+impl UnknownComponent {
+    pub fn new(json: Value, id: String) -> Self {
+        Self { id, data: json }
+    }
 }
 
 impl JsonSerialize for UnknownComponent {
@@ -133,7 +136,7 @@ impl Component for UnknownComponent {
     {
         Self {
             id: "".into(),
-            data: Default::default()
+            data: Default::default(),
         }
     }
 

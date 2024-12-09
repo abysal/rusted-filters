@@ -13,14 +13,14 @@ pub trait AddonPathResolver {
     }
 
     fn get_behaviour_block_output(&mut self, id: &str) -> PathBuf {
-        let mut path = self.get_behaviour_block_base();
+        let path = self.get_behaviour_block_base();
 
         let str = format!("{}.json", id.to_owned().replace(":", "_"));
 
         path.with_file_name(str)
     }
     fn get_behaviour_item_output(&mut self, id: &str) -> PathBuf {
-        let mut path = self.get_behaviour_item_base();
+        let path = self.get_behaviour_item_base();
 
         let str = format!("{}.json", id.to_owned().replace(":", "_"));
 

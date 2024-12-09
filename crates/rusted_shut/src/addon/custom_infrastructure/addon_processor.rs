@@ -6,11 +6,10 @@ use crate::addon::custom_infrastructure::component::custom_block::{
 use crate::addon::custom_infrastructure::component::custom_item::{
     CustomItemComponent, GenericItemCustomComponent,
 };
-use crate::addon::path_resolver::AddonPathResolver;
+use std::cell::UnsafeCell;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use thiserror::Error;
-use you_can::turn_off_the_borrow_checker;
 
 pub struct AddonProcessor<BlockError, ItemError, UserState> {
     block_components: HashMap<String, GenericBlockCustomComponent<BlockError, UserState>>,
@@ -150,99 +149,108 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
         Ok(addon)
     }
 
-    #[you_can::turn_off_the_borrow_checker]
-    fn process_blocks(&mut self, mut addon: Addon) -> Result<Addon, BlockError> {
-        let iteration_mut = &mut addon;
-        let pass_addon = &mut addon;
+    fn process_blocks(&mut self, addon: Addon) -> Result<Addon, BlockError> {
+        unsafe {
+            let cell = UnsafeCell::new(addon);
 
-        for (id, blk) in iteration_mut.blocks_mut_ref().iter_mut() {
-            let blk_ref = unsafe { blk.get().as_mut_unchecked() };
-            // Processes basic components
-            unsafe {
-                let component_iter = blk.get().as_mut_unchecked();
-                let component_ref = &mut blk.get().as_mut_unchecked().components;
+            let iteration_mut = cell.get().as_mut_unchecked();
+            let pass_addon = cell.get().as_mut_unchecked();
 
-                for (component_id, information) in
-                    component_iter.components.non_minecraft_components_mut()
+            for (id, blk) in iteration_mut.blocks_mut_ref().iter_mut() {
+                let blk_ref = blk.get().as_mut_unchecked();
+                // Processes basic components
                 {
-                    if let Some(func) = self.block_components.get_mut(component_id) {
-                        let base = information
-                            .as_any()
-                            .downcast_ref::<UnknownComponent>()
-                            .unwrap();
-                        let mut func = func.from_json_dynamic(&base.data, &mut self.user_state);
+                    let component_iter = blk.get().as_mut_unchecked();
+                    let component_ref = &mut blk.get().as_mut_unchecked().components;
 
-                        func.apply_component(
-                            blk_ref,
-                            component_ref,
-                            Some(pass_addon),
-                            &mut self.user_state,
-                        )?;
-                        component_ref.remove_component(id);
-                    }
-                }
-            }
-
-            // Processes permutations
-            unsafe {
-                let permutation_iter = blk.get().as_mut_unchecked();
-                for perm in permutation_iter.permutations.iter_mut() {
-                    let components = &mut perm.components;
-                    let component_ref = &mut perm.components;
-
-                    for (component_id, information) in components.non_minecraft_components_mut() {
+                    for (component_id, information) in
+                        component_iter.components.non_minecraft_components_mut()
+                    {
                         if let Some(func) = self.block_components.get_mut(component_id) {
                             let base = information
                                 .as_any()
                                 .downcast_ref::<UnknownComponent>()
                                 .unwrap();
-                            let mut func = func.from_json_dynamic(&base.data, &mut self.user_state);
 
                             func.apply_component(
+                                &base.data,
                                 blk_ref,
                                 component_ref,
                                 Some(pass_addon),
                                 &mut self.user_state,
                             )?;
-                            component_ref.remove_component(id);
+                            component_ref.remove_component(component_id);
+                        }
+                    }
+                }
+
+                // Processes permutations
+                {
+                    let permutation_iter = blk.get().as_mut_unchecked();
+                    let components_ref = &mut blk.get().as_mut_unchecked().permutations;
+
+                    for (idx, perm) in permutation_iter.permutations.iter_mut().enumerate() {
+                        let components = &mut perm.components;
+                        let component_ref = &mut components_ref[idx].components;
+
+                        for (component_id, information) in components.non_minecraft_components_mut()
+                        {
+                            if let Some(func) = self.block_components.get_mut(component_id) {
+                                let base = information
+                                    .as_any()
+                                    .downcast_ref::<UnknownComponent>()
+                                    .unwrap();
+
+                                func.apply_component(
+                                    &base.data,
+                                    blk_ref,
+                                    component_ref,
+                                    Some(pass_addon),
+                                    &mut self.user_state,
+                                )?;
+                                component_ref.remove_component(id);
+                            }
                         }
                     }
                 }
             }
-        }
 
-        Ok(addon)
+            Ok(cell.into_inner())
+        }
     }
 
-    #[turn_off_the_borrow_checker]
-    fn process_items(&mut self, mut addon: Addon) -> Result<Addon, ItemError> {
-        let iteration_mut = &mut addon;
-        let pass_addon = &mut addon;
+    fn process_items(&mut self, addon: Addon) -> Result<Addon, ItemError> {
+        unsafe {
+            let cell = UnsafeCell::new(addon);
 
-        for (id, item) in iteration_mut.items_mut_ref().iter_mut() {
-            let item_ref = unsafe { item.get().as_mut_unchecked() };
-            let pass_ref = &mut item_ref.components;
-            let components = &mut item_ref.components;
+            let iteration_mut = cell.get().as_mut_unchecked();
+            let pass_addon = cell.get().as_mut_unchecked();
 
-            for (component_id, information) in components.non_minecraft_components_mut() {
-                if let Some(func) = self.item_components.get_mut(component_id) {
-                    let base = information
-                        .as_any()
-                        .downcast_ref::<UnknownComponent>()
-                        .unwrap();
-                    let mut func = func.from_json_dynamic(&base.data, &mut self.user_state);
+            for (id, item) in iteration_mut.items_mut_ref().iter_mut() {
+                let item_ref = item.get().as_mut_unchecked();
+                let pass_ref = &mut item.get().as_mut_unchecked().components;
+                let components = &mut item.get().as_mut_unchecked().components;
 
-                    func.apply_component(
-                        item_ref,
-                        pass_ref,
-                        Some(pass_addon),
-                        &mut self.user_state,
-                    )?;
-                    pass_ref.remove_component(id);
+                for (component_id, information) in components.non_minecraft_components_mut() {
+                    if let Some(func) = self.item_components.get_mut(component_id) {
+                        let base = information
+                            .as_any()
+                            .downcast_ref::<UnknownComponent>()
+                            .unwrap();
+
+                        func.apply_component(
+                            &base.data,
+                            item_ref,
+                            pass_ref,
+                            Some(pass_addon),
+                            &mut self.user_state,
+                        )?;
+                        pass_ref.remove_component(id);
+                    }
                 }
             }
+            Ok(cell.into_inner())
         }
-        Ok(addon)
     }
 
     /// Hands back `UserState` over to callee

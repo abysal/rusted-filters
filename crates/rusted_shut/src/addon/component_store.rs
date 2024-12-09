@@ -3,18 +3,22 @@ use crate::addon::component::{
 };
 use crate::addon::traits::FormattedJsonSerialize;
 use serde_json::{Map, Value};
-use std::collections::btree_map::{Iter, IterMut};
-use std::collections::BTreeMap;
+use std::collections::hash_map::{Iter, IterMut};
+use std::collections::HashMap;
 use std::iter::Filter;
 
 #[derive(Default, Debug)]
 pub struct ComponentStore {
-    components: BTreeMap<String, GenericComponent>,
+    components: HashMap<String, GenericComponent>,
 }
 
 impl ComponentStore {
     pub fn new() -> Self {
         Default::default()
+    }
+
+    pub fn from_map(components: HashMap<String, GenericComponent>) -> Self {
+        Self { components }
     }
 
     pub fn get_component<T: Component + Clone>(&self, name: &str) -> Option<T> {

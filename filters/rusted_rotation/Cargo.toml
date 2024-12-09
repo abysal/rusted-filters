@@ -1,0 +1,12 @@
+[package]
+name = "rusted_rotation"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rusted_shut = { path = "../../crates/rusted_shut" }
+serde_json = "1.0.133"
+serde = { version = "1.0.215", features = ["derive"] }
+strum = "0.26.3"
+strum_macros = "0.26.4"
+semver = "1.0.23"

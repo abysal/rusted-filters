@@ -1,4 +1,3 @@
-use crate::addon::traits::BoxClone;
 use std::any::Any;
 
 pub trait CustomComponent {

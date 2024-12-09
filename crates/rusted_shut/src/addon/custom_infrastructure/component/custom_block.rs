@@ -15,17 +15,12 @@ pub trait CustomBlockComponent: CustomComponent {
 
     fn apply_component(
         &mut self,
+        data: &Value,
         owner: &mut Block,
         component_context: &mut ComponentStore,
         owning_addon: Option<&mut Addon>,
         state: &mut Self::UserState,
     ) -> Result<(), Self::Error>;
-
-    fn from_json_dynamic(
-        &self,
-        json: &Value,
-        state: &mut Self::UserState,
-    ) -> Box<dyn CustomBlockComponent<Error = Self::Error, UserState = Self::UserState>>;
 }
 
 pub type GenericBlockCustomComponent<BlockError, UserState> =

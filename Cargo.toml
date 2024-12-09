@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = ["crates/*", "filters/*"]
+members = ["crates/*", "filters/*", "tetanus"]
 
 [dependencies]
-rusted_shut = {path = "crates/rusted_shut"}
+rusted_shut = { path = "crates/rusted_shut" }
 

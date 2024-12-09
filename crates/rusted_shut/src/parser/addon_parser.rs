@@ -193,7 +193,7 @@ impl AddonParser {
             let item = Item::from_json(
                 raw_json,
                 parser_config
-                    .block_register
+                    .item_register
                     .as_ref()
                     .unwrap_or(&FormattedComponentRegister::new()),
                 Version::new(0, 0, 0),

@@ -6,7 +6,6 @@ use crate::addon::state::StateData;
 use crate::addon::traits::FormattedJsonSerialize;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::cell::UnsafeCell;
 use std::collections::HashMap;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -84,7 +83,7 @@ impl FormattedJsonSerialize for Block {
 
     fn to_json(&self) -> Value {
         json!({
-            "format_version": self.format_version,
+            "format_version": self.format_version.to_string(),
             "minecraft:block": {
                 "description": self.description,
                 "components": self.components.to_json(),

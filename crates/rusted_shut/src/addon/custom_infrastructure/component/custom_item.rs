@@ -13,16 +13,12 @@ pub trait CustomItemComponent: CustomComponent {
     ) -> Box<dyn CustomItemComponent<Error = Self::Error, UserState = Self::UserState>>;
     fn apply_component(
         &mut self,
+        data: &Value,
         owner: &mut Item,
         component_context: &mut ComponentStore,
         owning_addon: Option<&mut Addon>,
         state: &mut Self::UserState,
     ) -> Result<(), Self::Error>;
-    fn from_json_dynamic(
-        &self,
-        json: &Value,
-        state: &mut Self::UserState,
-    ) -> Box<dyn CustomItemComponent<Error = Self::Error, UserState = Self::UserState>>;
 }
 
 pub type GenericItemCustomComponent<BlockError, UserState> =
