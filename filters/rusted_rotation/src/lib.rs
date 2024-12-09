@@ -12,7 +12,7 @@ use std::any::Any;
 use std::collections::HashMap;
 use strum_macros::{Display, EnumString, ToString};
 
-struct Rotation;
+pub struct Rotation;
 #[derive(Deserialize)]
 struct RotationConfig {
     #[serde(default)]

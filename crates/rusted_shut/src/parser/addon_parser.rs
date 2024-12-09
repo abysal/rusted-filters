@@ -18,12 +18,16 @@ pub struct ParsedAddonResolver {
     block_path_lookup: HashMap<String, Box<Path>>,
     item_path_lookup: HashMap<String, Box<Path>>,
     base: PathBuf,
+    rp_from_base: PathBuf,
+    bp_from_base: PathBuf,
 }
 
 impl AddonPathResolver for ParsedAddonResolver {
     fn get_behaviour_block_output(&mut self, id: &str) -> PathBuf {
+        let mut x = self.get_behaviour_block_base().clone();
         if let Some(r) = self.block_path_lookup.get(id) {
-            r.clone().into_path_buf()
+            x.push(r.to_path_buf());
+            x
         } else {
             self.get_behaviour_block_base()
                 .with_file_name(format!("{}.json", id.replace(":", "_")))
@@ -31,8 +35,10 @@ impl AddonPathResolver for ParsedAddonResolver {
     }
 
     fn get_behaviour_item_output(&mut self, id: &str) -> PathBuf {
+        let mut x = self.get_behaviour_item_base().clone();
         if let Some(r) = self.item_path_lookup.get(id) {
-            r.clone().into_path_buf()
+            x.push(r.to_path_buf());
+            x
         } else {
             self.get_behaviour_block_base()
                 .with_file_name(format!("{}.json", id.replace(":", "_")))
@@ -41,23 +47,25 @@ impl AddonPathResolver for ParsedAddonResolver {
 
     fn get_behaviour_base(&mut self) -> PathBuf {
         let mut r = self.base.clone();
-        r.push("BP");
+        r.push(&self.bp_from_base);
         r
     }
 
     fn get_resource_base(&mut self) -> PathBuf {
         let mut r = self.base.clone();
-        r.push("RP");
+        r.push(&self.rp_from_base);
         r
     }
 }
 
 impl ParsedAddonResolver {
-    pub fn new(base: PathBuf) -> Self {
+    pub fn new(base: PathBuf, bp_from_base: PathBuf, rp_from_base: PathBuf) -> Self {
         Self {
             base,
             block_path_lookup: HashMap::new(),
             item_path_lookup: HashMap::new(),
+            bp_from_base,
+            rp_from_base,
         }
     }
 }
@@ -67,6 +75,8 @@ pub struct ParserConfig {
     parse_block: bool,
     parse_items: bool,
     skip_bland: bool,
+    rp_from_base: Option<String>,
+    bp_from_base: Option<String>,
     block_register: Option<FormattedComponentRegister>,
     item_register: Option<FormattedComponentRegister>,
 }
@@ -88,15 +98,33 @@ impl AddonParser {
         folder_base: P,
         config: ParserConfig,
     ) -> Result<Addon, AddonParseError> {
-        let mut resolver = ParsedAddonResolver::new(folder_base.as_ref().to_path_buf());
+        let mut resolver = ParsedAddonResolver::new(
+            folder_base.as_ref().to_path_buf(),
+            config
+                .bp_from_base
+                .as_ref()
+                .unwrap_or(&"BP".to_string())
+                .into(),
+            config
+                .rp_from_base
+                .as_ref()
+                .unwrap_or(&"RP".to_string())
+                .into(),
+        );
 
         let blocks = Self::parse_blocks(&mut resolver, &config)?;
+        let items = Self::parse_items(&mut resolver, &config)?;
 
         let mut addon = Addon::new(resolver);
 
         if let Some(v) = blocks {
             for b in v {
                 addon.push_block(b)
+            }
+        }
+        if let Some(v) = items {
+            for i in v {
+                addon.push_item(i)
             }
         }
 
@@ -164,7 +192,7 @@ impl AddonParser {
 
     fn parse_items(
         resolver: &mut ParsedAddonResolver,
-        parser_config: ParserConfig,
+        parser_config: &ParserConfig,
     ) -> Result<Option<Vec<Item>>, AddonParseError> {
         if !parser_config.parse_items {
             return Ok(None);
