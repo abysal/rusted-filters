@@ -1,0 +1,7 @@
+[package]
+name = "rusted-company"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rusted_shut = {path = "../../crates/rusted_shut"}
