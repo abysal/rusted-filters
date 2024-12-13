@@ -3,7 +3,7 @@ use rusted_shut::addon::addon::Addon;
 use rusted_shut::addon::custom_infrastructure::addon_processor::AddonProcessor;
 use rusted_shut::addon::custom_infrastructure::component::custom_block::EmptyBlockState;
 use rusted_shut::parser::addon_parser::{AddonParser, ParserConfig};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 fn default_rp() -> String {
     "RP".to_string()

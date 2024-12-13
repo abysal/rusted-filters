@@ -3,8 +3,9 @@ name = "tetanus"
 version = "0.1.0"
 edition = "2021"
 
+
 [dependencies]
-rusted_rotation = { path = "../filters/rusted_rotation" }
+rusted_rotation = { path = "filters/rusted_rotation" }
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
-rusted_shut = { path = "../crates/rusted_shut" }
+rusted_shut = { path = "crates/rusted_shut" }

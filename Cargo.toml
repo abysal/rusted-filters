@@ -3,9 +3,8 @@ name = "rusted-filters"
 version = "0.1.0"
 edition = "2021"
 
+
+
+
 [workspace]
-members = ["crates/*", "filters/*", "tetanus"]
-
-[dependencies]
-rusted_shut = { path = "crates/rusted_shut" }
-
+members = ["tetanus/crates/*", "tetanus/filters/*", "tetanus"]
