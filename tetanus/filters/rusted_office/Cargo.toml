@@ -1,0 +1,13 @@
+[package]
+name = "rusted_office"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rusted_shut = { path = "../../crates/rusted_shut" }
+oxc = { features = ["codegen"], version = "0.41.x" }
+serde = { version = "1.x.x", features = ["derive"] }
+walkdir = "2.x.x"
+thiserror = "2.x.x"
+strum = { version = "0.26.x", features = ["strum_macros", "derive"] }
+num-traits = "0.2.19"
