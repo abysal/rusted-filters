@@ -6,7 +6,7 @@ pub struct IntRange(pub Vec<i32>);
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum StateData {
-    Boolean(bool),
+    Boolean(Vec<bool>),
     IntRange(IntRange),
     String(Vec<String>),
 }
