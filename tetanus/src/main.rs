@@ -30,7 +30,7 @@ fn default_main_file() -> String {
 }
 
 fn default_base_path() -> String {
-    "./tmp".into()
+    "./".into()
 }
 
 fn true_func() -> bool {
