@@ -1,4 +1,4 @@
-#![feature(pattern)]
+#![allow(dead_code)]
 pub mod ast_utils;
 pub mod component_registry;
 pub mod config;

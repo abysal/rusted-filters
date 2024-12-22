@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use rusted_office::config::{ExposedOfficeConfig, OfficeConfig};
 use rusted_office::filter::RustedOffice;
 use rusted_rotation::Rotation;
@@ -29,7 +30,7 @@ fn default_main_file() -> String {
 }
 
 fn default_base_path() -> String {
-    "./".into()
+    "./tmp".into()
 }
 
 fn true_func() -> bool {
@@ -108,7 +109,6 @@ fn apply_office(addon: Addon, config: &TetanusConfig) -> Addon {
 }
 
 fn main() {
-    println!("{:?}", std::env::current_dir());
     let conf = get_config().expect("Failed to process config");
 
     let mut addon = AddonParser::parse_addon(

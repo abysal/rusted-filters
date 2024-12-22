@@ -7,12 +7,8 @@ use crate::find_n_with_comments;
 use crate::stages::ast_stage::ASTImpl;
 use crate::string_extensions::*;
 use log::error;
-use swc_common::comments::{Comment, Comments};
-use swc_common::{BytePos, Spanned};
-use swc_ecma_ast::{ClassDecl, ExportDecl, Function};
-use swc_ecma_visit::{
-    AstNodePath, AstParentNodeRef, Visit, VisitAstPath, VisitWith, VisitWithAstPath,
-};
+use swc_common::comments::Comment;
+use swc_ecma_ast::ClassDecl;
 use thiserror::Error;
 
 const COMPONENT_START_IDENTIFIER: &'static str = "@Generate";
@@ -137,7 +133,7 @@ impl ComponentRipStage {
         out: &mut Vec<(&'a str, &'a str)>,
     ) -> Result<(), ComponentRipperError> {
         let (current, next) = comment_section.scoped_split(
-            ',',
+            &',',
             &[
                 ScopeDeclaration {
                     begin: '{',

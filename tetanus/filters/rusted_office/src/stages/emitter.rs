@@ -1,6 +1,5 @@
 use crate::component_registry::{ComponentInformation, ComponentInstance, CustomComponentRegistry};
 use crate::stages::init_function_rip_stage::FunctionInformation;
-use len_trait::Len;
 use std::fmt::Write;
 
 pub struct CodeEmitter {
@@ -27,7 +26,7 @@ impl CodeEmitter {
     }
 
     fn function(&self, out: &mut String) {
-        let mut emit_body = || {
+        let emit_body = || {
             let mut result = String::new();
 
             for f in &self.functions {
@@ -54,21 +53,27 @@ impl CodeEmitter {
                         }
                     );
 
-                    if instance.static_information.is_pure_data {
-                        writeln!(&mut result, "{};", call_expression).expect("Failed to write")
-                    } else {
-                        writeln!(
-                            &mut result,
-                            "event.{}.registerCustomComponent(\"{}\", {});",
-                            registry_name,
-                            format!(
-                                "{}_{}",
-                                instance.static_information.search_id, instance.instance_id
-                            ),
-                            call_expression
-                        )
-                        .expect("Failed to write")
-                    }
+                    writeln!(&mut result,
+                             "try {{ {} }} catch (e) {{ console.error(`Major Error When registering component: {}, subid: {}, error: ${{e}}`);}}",
+                             if instance.static_information.is_pure_data {
+                                format!("{};", call_expression)
+                            } else {
+                                format!(
+                                    "event.{}.registerCustomComponent(\"{}\", {});",
+                                    registry_name,
+                                    format!(
+                                        "{}_{}",
+                                        instance.static_information.search_id, instance.instance_id
+                                    ),
+                                    call_expression
+                                )
+                            },
+                            instance.static_information.information.class_id,
+                             format!(
+                                 "{}_{}",
+                                 instance.static_information.search_id, instance.instance_id
+                             ),
+                    ).expect("Failed to write");
                 };
 
             for instance in self.registry.block_instances_iter() {

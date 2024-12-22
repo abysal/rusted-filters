@@ -1,5 +1,4 @@
 use crate::config::{OfficeConfig, ParserMode};
-use crate::stages::component_rip_stage::ComponentRipStage;
 use crate::stages::init_function_rip_stage::FunctionRipper;
 use std::path::{Path, StripPrefixError};
 use std::pin::Pin;
@@ -71,13 +70,21 @@ impl ASTStage {
 
             let source = Pin::new(Box::new(std::fs::read_to_string(path.into_path())?));
 
-            let (module, comments) = self.emit_single_impl(&source)?;
-            ast.push(ASTImpl {
-                module,
-                source,
-                comments,
-                relative_path: base,
-            })
+            match self.emit_single_impl(&source) {
+                Ok(r) => {
+                    if let Some((module, comments)) = r {
+                        ast.push(ASTImpl {
+                            module,
+                            source,
+                            comments,
+                            relative_path: base,
+                        })
+                    }
+                }
+                Err(e) => {
+                    log::error!("Failed to parse: {:?}, with error: {:?}", base, e);
+                }
+            }
         }
 
         Ok(FunctionRipper::new(self.config, ast))
@@ -86,8 +93,12 @@ impl ASTStage {
     fn emit_single_impl(
         &self,
         source: &String,
-    ) -> Result<(Module, SingleThreadedComments), ASTError> {
+    ) -> Result<Option<(Module, SingleThreadedComments)>, ASTError> {
         let comments = SingleThreadedComments::default();
+
+        if source.is_empty() {
+            return Ok(None);
+        }
 
         let mut parser = Parser::new(
             if self.config.parsed_config.mode == ParserMode::TS {
@@ -104,32 +115,6 @@ impl ASTStage {
             .map_err(|e| ASTError::ModuleError(e))?
             .expect_module();
 
-        Ok((module, comments))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::config::OfficeConfig;
-    use crate::filter::RustedOffice;
-    use std::path::PathBuf;
-
-    #[test]
-    fn comment_poll_test() {
-        let cfg = OfficeConfig {
-            parsed_config: Default::default(),
-            script_search_location: PathBuf::new().into_boxed_path(),
-        };
-
-        let office = RustedOffice::new(cfg).force_ast();
-        let source = "\
-import {war} from \"snor\";
-// This is a comment
-
-// This is the comment i want
-class Retro {constructor() {}}
-        "
-        .to_string();
-        office.emit_single_impl(&source).unwrap();
+        Ok(Some((module, comments)))
     }
 }

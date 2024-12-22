@@ -1,9 +1,24 @@
 use num_traits::Zero;
-use std::str::pattern::Pattern;
 
 pub struct StringCursor<'a> {
     underlying: &'a str,
     index: usize,
+}
+
+pub trait Matcher {
+    fn is_start(&self, target: &str) -> bool;
+}
+
+impl Matcher for str {
+    fn is_start(&self, target: &str) -> bool {
+        target.starts_with(self)
+    }
+}
+
+impl Matcher for char {
+    fn is_start(&self, target: &str) -> bool {
+        target.starts_with(*self)
+    }
 }
 
 pub trait StringCursorPredicate {
@@ -136,9 +151,9 @@ impl IndexConvert for ByteIndex {
 pub trait StringExtension {
     fn index_out_of_scope(&self, scope_declarations: &[ScopeDeclaration]) -> Option<usize>;
     fn scoped_slice(&self, scope_declarations: &[ScopeDeclaration]) -> Option<&str>;
-    fn scoped_split(
+    fn scoped_split<P: Matcher>(
         &self,
-        haystack: impl Pattern + Clone,
+        haystack: &P,
         scope_declarations: &[ScopeDeclaration],
         include_haystack: bool,
         haystack_size: usize,
@@ -175,9 +190,9 @@ impl StringExtension for str {
         Some(&self[1..idx - 2])
     }
 
-    fn scoped_split(
+    fn scoped_split<P: Matcher>(
         &self,
-        haystack: impl Pattern + Clone,
+        haystack: &P,
         scope_declarations: &[ScopeDeclaration],
         include_haystack: bool,
         haystack_size: usize,
@@ -186,7 +201,7 @@ impl StringExtension for str {
         while idx < self.len() {
             if let Some(e) = self[idx..].index_out_of_scope(scope_declarations) {
                 idx += e - 1;
-            } else if self[idx..].starts_with(haystack.clone()) {
+            } else if haystack.is_start(&self[idx..]) {
                 return (
                     &self[..idx],
                     // Seems a little confusing but since a bool is 0 for false and 1 for true this basically just sets it to 0 if false is passed
@@ -258,7 +273,7 @@ mod tests {
 
         for (str, expected, include_haystack) in information {
             let out = str.scoped_split(
-                ',',
+                &',',
                 &[ScopeDeclaration {
                     begin: '{',
                     end: '}',

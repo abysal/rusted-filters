@@ -178,7 +178,7 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
             let cell = UnsafeCell::new(addon);
 
             let iteration_mut = cell.get().as_mut().unwrap_unchecked();
-            let pass_addon = cell.get().as_mut().unwrap_unchecked();
+            //let pass_addon = cell.get().as_mut().unwrap_unchecked();
 
             for (_, blk) in iteration_mut.blocks_mut_ref().iter_mut() {
                 // Processes basic components
@@ -198,12 +198,12 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
                                 &base.data,
                                 blk,
                                 &mut component_ref,
-                                Some(pass_addon),
+                                None,
                                 &mut self.user_state,
                             )?;
                             component_ref.remove_component(component_id);
+                            blk.components = component_ref;
                         }
-                        blk.components = component_ref;
                     }
                 }
 
@@ -227,7 +227,7 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
                                     &base.data,
                                     blk,
                                     &mut component_ref,
-                                    Some(pass_addon),
+                                    None,
                                     &mut self.user_state,
                                 )?;
                                 component_ref.remove_component(component_id);
@@ -248,13 +248,13 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
             let cell = UnsafeCell::new(addon);
 
             let iteration_mut = cell.get().as_mut().unwrap_unchecked();
-            let pass_addon = cell.get().as_mut().unwrap_unchecked();
+            //let pass_addon = cell.get().as_mut().unwrap_unchecked();
 
-            for (id, item) in iteration_mut.items_mut_ref().iter_mut() {
-                let mut pass_ref = item.components.clone();
+            for (_, item) in iteration_mut.items_mut_ref().iter_mut() {
                 let mut components = item.components.clone();
 
                 for (component_id, information) in components.non_minecraft_components_mut() {
+                    let mut pass_ref = item.components.clone();
                     if let Some(func) = self.item_components.get_mut(component_id) {
                         let base = information
                             .as_any()
@@ -265,13 +265,14 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
                             &base.data,
                             item,
                             &mut pass_ref,
-                            Some(pass_addon),
+                            None,
                             &mut self.user_state,
                         )?;
-                        pass_ref.remove_component(id);
+                        pass_ref.remove_component(component_id);
+
+                        item.components = pass_ref;
                     }
                 }
-                item.components = pass_ref;
             }
             Ok(cell.into_inner())
         }

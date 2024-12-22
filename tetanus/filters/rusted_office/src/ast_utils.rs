@@ -9,9 +9,7 @@ macro_rules! find_n_with_comments {
     ($class_name:ident, $type_name: ty, $func_name:ident, $ast:ident) => {{
         use swc_common::comments::Comments;
         use swc_common::Spanned;
-        use swc_ecma_visit::{
-            AstNodePath, AstParentNodeRef, Visit, VisitAstPath, VisitWith, VisitWithAstPath,
-        };
+        use swc_ecma_visit::VisitWith;
         struct Collector<'a> {
             out: Vec<($type_name, Vec<swc_common::comments::Comment>)>,
             ast: &'a ASTImpl,

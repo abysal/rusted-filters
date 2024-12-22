@@ -62,7 +62,6 @@ impl RustedOffice {
             {
                 let mut pth = PathBuf::from(self.config.script_search_location.clone());
                 pth.push(self.config.script_entry.clone());
-                println!("{pth:?}");
                 pth
             },
             format!(
