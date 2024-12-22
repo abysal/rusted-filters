@@ -1,6 +1,7 @@
+use std::fmt::Debug;
 use std::path::PathBuf;
 
-pub trait AddonPathResolver {
+pub trait AddonPathResolver: Debug {
     fn get_behaviour_block_base(&mut self) -> PathBuf {
         let mut base = self.get_behaviour_base();
         base.push("blocks");
@@ -35,6 +36,7 @@ pub mod default_impl {
     use crate::addon::path_resolver::AddonPathResolver;
     use std::path::PathBuf;
 
+    #[derive(Debug)]
     pub struct BaseResolver(PathBuf);
 
     impl BaseResolver {

@@ -1,23 +1,13 @@
-use oxc::span::SourceType;
 use serde::Deserialize;
 use std::path::Path;
 use strum::*;
 
-#[derive(Deserialize, Debug, Clone, Copy, Display)]
+#[derive(Deserialize, Debug, Clone, Copy, Display, PartialEq)]
 pub enum ParserMode {
-    #[strum(serialize = ".ts")]
+    #[strum(serialize = "ts")]
     TS,
-    #[strum(serialize = ".js")]
+    #[strum(serialize = "js")]
     JS,
-}
-
-impl From<ParserMode> for SourceType {
-    fn from(value: ParserMode) -> Self {
-        match value {
-            ParserMode::TS => SourceType::ts(),
-            ParserMode::JS => SourceType::mjs(),
-        }
-    }
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -38,5 +28,6 @@ impl Default for ExposedOfficeConfig {
 #[derive(Clone)]
 pub struct OfficeConfig {
     pub parsed_config: ExposedOfficeConfig,
+    pub script_entry: String,
     pub script_search_location: Box<Path>,
 }

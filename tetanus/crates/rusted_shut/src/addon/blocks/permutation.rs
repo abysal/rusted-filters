@@ -1,10 +1,10 @@
 use crate::addon::component::{ComponentError, FormattedComponentRegister};
 use crate::addon::component_store::ComponentStore;
-use crate::addon::traits::{FormattedJsonSerialize};
+use crate::addon::traits::FormattedJsonSerialize;
 use semver::Version;
 use serde_json::{json, Value};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Permutation {
     pub condition: String,
     pub components: ComponentStore,
@@ -31,7 +31,7 @@ impl FormattedJsonSerialize for Permutation {
 
     fn from_json(
         json: &Value,
-        formatted_component_register:& FormattedComponentRegister,
+        formatted_component_register: &FormattedComponentRegister,
         version: Version,
     ) -> Result<Self, Self::Error>
     where

@@ -15,6 +15,7 @@ pub struct ItemDescription {
     pub is_experimental: bool,
 }
 
+#[derive(Debug)]
 pub struct Item {
     pub format_version: semver::Version,
     pub description: ItemDescription,

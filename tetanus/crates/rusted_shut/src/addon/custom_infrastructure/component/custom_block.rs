@@ -7,19 +7,20 @@ use serde_json::Value;
 pub struct EmptyBlockState;
 
 pub trait CustomBlockComponent: CustomComponent {
-    type UserState = EmptyBlockState;
+    type UserState;
+    type Error;
 
-    fn clone(
+    fn block_clone(
         &self,
     ) -> Box<dyn CustomBlockComponent<Error = Self::Error, UserState = Self::UserState>>;
 
-    fn apply_component(
+    fn apply_component<'b>(
         &mut self,
         data: &Value,
         owner: &mut Block,
         component_context: &mut ComponentStore,
         owning_addon: Option<&mut Addon>,
-        state: &mut Self::UserState,
+        state: &'b mut Self::UserState,
     ) -> Result<(), Self::Error>;
 }
 

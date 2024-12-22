@@ -2,6 +2,7 @@ pub mod addon;
 pub mod blocks;
 pub mod component;
 pub mod component_store;
+pub mod components;
 pub mod custom_infrastructure;
 pub mod items;
 pub mod mainifest;

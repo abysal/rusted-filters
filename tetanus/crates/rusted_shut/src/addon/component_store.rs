@@ -7,7 +7,7 @@ use std::collections::hash_map::{Iter, IterMut};
 use std::collections::HashMap;
 use std::iter::Filter;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct ComponentStore {
     components: HashMap<String, GenericComponent>,
 }
@@ -37,11 +37,27 @@ impl ComponentStore {
         }
     }
 
-    pub fn get_component_mut<T: Component>(&mut self) -> Option<&mut T> {
+    pub fn get_component_mut<T: Component>(&mut self, name: &str) -> Option<&mut T> {
         self.components
-            .get_mut(T::static_id())?
+            .get_mut(name)?
             .as_any_mut()
             .downcast_mut::<T>()
+    }
+
+    pub fn get_component_mut_default<T: Component + Default>(
+        &mut self,
+        name: &str,
+    ) -> Option<&mut T> {
+        if !self.components.contains_key(name) {
+            self.components
+                .insert(name.to_string(), Box::new(T::default()));
+        }
+
+        self.components
+            .get_mut(name)
+            .unwrap()
+            .as_any_mut()
+            .downcast_mut()
     }
 
     pub fn remove_component(&mut self, name: &str) {
@@ -117,14 +133,19 @@ impl FormattedJsonSerialize for ComponentStore {
             .map(|(id, blob)| {
                 if let Some(comp) = formatted_component_register.get_component(&current_format, id)
                 {
-                    (id.clone(), comp.from_json_dynamic(blob, id))
-                } else {
-                    (
+                    Ok::<(String, Box<dyn Component>), Self::Error>((
                         id.clone(),
-                        UnknownComponent::static_new().from_json_dynamic(blob, id),
-                    )
+                        comp.from_json_dynamic(blob, id)?,
+                    ))
+                } else {
+                    Ok::<(String, Box<dyn Component>), Self::Error>((
+                        id.clone(),
+                        UnknownComponent::static_new().from_json_dynamic(blob, id)?,
+                    ))
                 }
             })
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
             .collect();
 
         Ok(Self { components })

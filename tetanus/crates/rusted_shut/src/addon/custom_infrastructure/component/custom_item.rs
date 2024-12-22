@@ -7,8 +7,9 @@ use serde_json::Value;
 pub struct EmptyBlockState;
 
 pub trait CustomItemComponent: CustomComponent {
-    type UserState = EmptyBlockState;
-    fn clone(
+    type UserState;
+    type Error;
+    fn item_clone(
         &self,
     ) -> Box<dyn CustomItemComponent<Error = Self::Error, UserState = Self::UserState>>;
     fn apply_component(
@@ -21,5 +22,5 @@ pub trait CustomItemComponent: CustomComponent {
     ) -> Result<(), Self::Error>;
 }
 
-pub type GenericItemCustomComponent<BlockError, UserState> =
-    Box<dyn CustomItemComponent<Error = BlockError, UserState = UserState>>;
+pub type GenericItemCustomComponent<ItemError, UserState> =
+    Box<dyn CustomItemComponent<Error = ItemError, UserState = UserState>>;

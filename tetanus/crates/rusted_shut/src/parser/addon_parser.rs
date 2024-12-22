@@ -84,11 +84,11 @@ pub struct ParserConfig {
 #[derive(Error, Debug)]
 pub enum AddonParseError {
     #[error(transparent)]
-    JsonError(serde_json::Error),
+    JsonError(#[from] serde_json::Error),
     #[error(transparent)]
-    FSError(std::io::Error),
+    FSError(#[from] std::io::Error),
     #[error(transparent)]
-    ComponentError(ComponentError),
+    ComponentError(#[from] ComponentError),
 }
 
 pub struct AddonParser;
@@ -166,7 +166,7 @@ impl AddonParser {
                 parser_config
                     .block_register
                     .as_ref()
-                    .unwrap_or(&FormattedComponentRegister::new()),
+                    .unwrap_or(&FormattedComponentRegister::init_blocks()),
                 Version::new(0, 0, 0),
             )
             .map_err(|e| AddonParseError::ComponentError(e))?;
@@ -215,18 +215,17 @@ impl AddonParser {
                 }
             })
         {
-            let data = std::fs::read_to_string(file.path()).map_err(|e| FSError(e))?;
-            let raw_json = &serde_json::from_str::<Value>(&data).map_err(|e| JsonError(e))?;
+            let data = std::fs::read_to_string(file.path())?;
+            let raw_json = &serde_json::from_str::<Value>(&data)?;
 
             let item = Item::from_json(
                 raw_json,
                 parser_config
                     .item_register
                     .as_ref()
-                    .unwrap_or(&FormattedComponentRegister::new()),
+                    .unwrap_or(&FormattedComponentRegister::init_items()),
                 Version::new(0, 0, 0),
-            )
-            .map_err(|e| AddonParseError::ComponentError(e))?;
+            )?;
 
             if parser_config.skip_bland && item.is_bland() {
                 continue;

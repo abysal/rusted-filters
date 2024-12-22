@@ -1,4 +1,6 @@
+use crate::addon::components::custom_components::MinecraftCustomComponents;
 use crate::addon::traits::JsonSerialize;
+use semver::Version;
 use serde_json::Value;
 use std::any::Any;
 use std::collections::HashMap;
@@ -39,7 +41,8 @@ pub trait Component: Any + JsonSerialize + Debug {
 
     fn comp_clone(&self) -> GenericComponent;
 
-    fn from_json_dynamic(&self, json: &Value, id: &str) -> GenericComponent;
+    fn from_json_dynamic(&self, json: &Value, id: &str)
+        -> Result<GenericComponent, ComponentError>;
 }
 
 pub type UsedComponent = dyn Component;
@@ -89,6 +92,22 @@ impl FormattedComponentRegister {
                 vec![(ver, Box::new(T::static_new()))],
             );
         }
+    }
+
+    pub fn init_blocks() -> Self {
+        let mut self_data = Self::new();
+        self_data.bind_component::<MinecraftCustomComponents>(VersionRestriction::Min(
+            Version::new(1, 21, 0),
+        ));
+        self_data
+    }
+
+    pub fn init_items() -> Self {
+        let mut self_data = Self::new();
+        self_data.bind_component::<MinecraftCustomComponents>(VersionRestriction::Min(
+            Version::new(1, 21, 0),
+        ));
+        self_data
     }
 
     pub fn get_component(&self, format: &semver::Version, id: &str) -> Option<&GenericComponent> {
@@ -156,10 +175,14 @@ impl Component for UnknownComponent {
         Box::new(self.clone())
     }
 
-    fn from_json_dynamic(&self, json: &Value, id: &str) -> GenericComponent {
-        Box::new(Self {
+    fn from_json_dynamic(
+        &self,
+        json: &Value,
+        id: &str,
+    ) -> Result<GenericComponent, ComponentError> {
+        Ok(Box::new(Self {
             id: id.into(),
             data: json.clone(),
-        })
+        }))
     }
 }

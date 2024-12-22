@@ -1,30 +1,38 @@
-use crate::config::OfficeConfig;
+use crate::config::{OfficeConfig, ParserMode};
 use crate::stages::component_rip_stage::ComponentRipStage;
-use oxc::allocator::Allocator;
-use oxc::ast::ast::Program;
-use oxc::parser::{ParseOptions, Parser};
+use crate::stages::init_function_rip_stage::FunctionRipper;
+use std::path::{Path, StripPrefixError};
+use std::pin::Pin;
+use swc_common::comments::SingleThreadedComments;
+use swc_common::input::StringInput;
+use swc_common::BytePos;
+use swc_ecma_ast::Module;
+use swc_ecma_parser::{Parser, Syntax};
 use thiserror::Error;
-
-pub type OxcBox<'a, T> = oxc::allocator::Box<'a, T>;
 
 #[derive(Debug, Error)]
 pub enum ASTError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
+    #[error("{0:?}")]
+    ModuleError(swc_ecma_parser::error::Error),
+    #[error(transparent)]
+    StripPrefix(#[from] StripPrefixError),
 }
 
-pub struct ASTImpl<'a> {
-    pub prog: Program<'a>,
-    pub alloc: &'a Allocator,
+pub struct ASTImpl {
+    pub source: Pin<Box<String>>,
+    pub module: Module,
+    pub comments: SingleThreadedComments,
+    pub relative_path: Box<Path>, // This is the path relative from the scripts base dir (this is needed for register generation)
 }
 
-pub struct ASTStage<'a> {
-    pub alloc: &'a Allocator,
+pub struct ASTStage {
     pub config: OfficeConfig,
 }
 
-impl<'a> ASTStage<'a> {
-    pub fn next_state(mut self) -> Result<ComponentRipStage<'a>, ASTError> {
+impl ASTStage {
+    pub fn next_state(self) -> Result<FunctionRipper, ASTError> {
         let paths = walkdir::WalkDir::new(&self.config.script_search_location)
             .follow_links(true)
             .into_iter()
@@ -55,22 +63,73 @@ impl<'a> ASTStage<'a> {
         let mut ast = Vec::new();
 
         for path in paths {
-            let mut opt = ParseOptions::default();
-            opt.parse_regular_expression = false;
+            let base: Box<Path> = Box::from(
+                path.clone()
+                    .into_path()
+                    .strip_prefix(&self.config.script_search_location)?,
+            );
 
-            let str = Box::new(std::fs::read_to_string(path.path())?);
+            let source = Pin::new(Box::new(std::fs::read_to_string(path.into_path())?));
+
+            let (module, comments) = self.emit_single_impl(&source)?;
             ast.push(ASTImpl {
-                alloc: self.alloc,
-                prog: Parser::new(
-                    self.alloc,
-                    str.leak(),
-                    self.config.parsed_config.mode.clone().into(),
-                )
-                .parse()
-                .program,
-            });
+                module,
+                source,
+                comments,
+                relative_path: base,
+            })
         }
 
-        Ok(ComponentRipStage::new(self.config, self.alloc, ast))
+        Ok(FunctionRipper::new(self.config, ast))
+    }
+
+    fn emit_single_impl(
+        &self,
+        source: &String,
+    ) -> Result<(Module, SingleThreadedComments), ASTError> {
+        let comments = SingleThreadedComments::default();
+
+        let mut parser = Parser::new(
+            if self.config.parsed_config.mode == ParserMode::TS {
+                Syntax::Typescript(Default::default())
+            } else {
+                Syntax::Es(Default::default())
+            },
+            StringInput::new(source, BytePos(0), BytePos((source.len() - 1) as u32)),
+            Some(&comments),
+        );
+
+        let module = parser
+            .parse_program()
+            .map_err(|e| ASTError::ModuleError(e))?
+            .expect_module();
+
+        Ok((module, comments))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::config::OfficeConfig;
+    use crate::filter::RustedOffice;
+    use std::path::PathBuf;
+
+    #[test]
+    fn comment_poll_test() {
+        let cfg = OfficeConfig {
+            parsed_config: Default::default(),
+            script_search_location: PathBuf::new().into_boxed_path(),
+        };
+
+        let office = RustedOffice::new(cfg).force_ast();
+        let source = "\
+import {war} from \"snor\";
+// This is a comment
+
+// This is the comment i want
+class Retro {constructor() {}}
+        "
+        .to_string();
+        office.emit_single_impl(&source).unwrap();
     }
 }

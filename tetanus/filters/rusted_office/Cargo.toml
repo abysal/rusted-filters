@@ -5,9 +5,18 @@ edition = "2021"
 
 [dependencies]
 rusted_shut = { path = "../../crates/rusted_shut" }
-oxc = { features = ["codegen"], version = "0.41.x" }
 serde = { version = "1.x.x", features = ["derive"] }
 walkdir = "2.x.x"
 thiserror = "2.x.x"
 strum = { version = "0.26.x", features = ["strum_macros", "derive"] }
-num-traits = "0.2.19"
+num-traits = "0.2.x"
+swc_ecma_ast = "5.x.x"
+swc_ecma_parser = "6.x.x"
+swc_ecma_codegen = "5.x.x"
+swc_ecma_visit = { version = "5.x.x", features = ["path"] }
+swc_common = "5.x.x"
+len-trait = "0.6.x"
+log = "0.4.x"
+bon = "3.x.x"
+serde_json = "1.x.x"
+concat-idents = "1.x.x"

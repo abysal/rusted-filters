@@ -5,7 +5,9 @@ use rusted_shut::addon::blocks::permutation::Permutation;
 use rusted_shut::addon::component::{Component, UnknownComponent};
 use rusted_shut::addon::component_store::ComponentStore;
 use rusted_shut::addon::custom_infrastructure::component::custom_base::CustomComponent;
-use rusted_shut::addon::custom_infrastructure::component::custom_block::CustomBlockComponent;
+use rusted_shut::addon::custom_infrastructure::component::custom_block::{
+    CustomBlockComponent, EmptyBlockState,
+};
 use serde::Deserialize;
 use serde_json::json;
 use std::any::Any;
@@ -27,8 +29,6 @@ enum Mode {
     Facing,
 }
 impl CustomComponent for Rotation {
-    type Error = serde_json::Error;
-
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -132,7 +132,9 @@ impl Rotation {
 }
 
 impl CustomBlockComponent for Rotation {
-    fn clone(
+    type UserState = EmptyBlockState;
+    type Error = serde_json::Error;
+    fn block_clone(
         &self,
     ) -> Box<dyn CustomBlockComponent<Error = Self::Error, UserState = Self::UserState>> {
         Box::new(Self)

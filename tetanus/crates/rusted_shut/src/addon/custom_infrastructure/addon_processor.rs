@@ -38,6 +38,14 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
         }
     }
 
+    pub fn state_mut(&mut self) -> &mut UserState {
+        &mut self.user_state
+    }
+
+    pub fn state(&self) -> &UserState {
+        &self.user_state
+    }
+
     /// Binds a block component to the `AddonProcessor`.
     ///
     /// This method takes a block component and automatically uses its static ID for registration.
@@ -65,7 +73,15 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
         comp: T,
         id: &str,
     ) -> &mut Self {
-        self.bind_block_component_box(Box::new(comp), id.into())
+        self.bind_block_component_box_name(Box::new(comp), id.into())
+    }
+
+    pub fn bind_block_component_box(
+        &mut self,
+        comp: Box<dyn CustomBlockComponent<Error = BlockError, UserState = UserState>>,
+    ) -> &mut Self {
+        self.block_components.insert(comp.id().to_string(), comp);
+        self
     }
 
     /// Binds a boxed block component to the `AddonProcessor`.
@@ -75,7 +91,7 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
     /// # Arguments
     /// * `comp` - A boxed block component implementing `CustomBlockComponent`.
     /// * `id` - The ID to associate with this component.
-    pub fn bind_block_component_box(
+    pub fn bind_block_component_box_name(
         &mut self,
         comp: Box<dyn CustomBlockComponent<Error = BlockError, UserState = UserState>>,
         id: String,
@@ -111,7 +127,15 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
         comp: T,
         id: &str,
     ) -> &mut Self {
-        self.bind_item_component_box(Box::new(comp), id.into())
+        self.bind_item_component_box_name(Box::new(comp), id.into())
+    }
+
+    pub fn bind_item_component_box(
+        &mut self,
+        comp: Box<dyn CustomItemComponent<Error = ItemError, UserState = UserState>>,
+    ) -> &mut Self {
+        self.item_components.insert(comp.id().to_string(), comp);
+        self
     }
 
     /// Binds a boxed item component to the `AddonProcessor`.
@@ -121,7 +145,7 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
     /// # Arguments
     /// * `comp` - A boxed item component implementing `CustomItemComponent`.
     /// * `id` - The ID to associate with this component.
-    pub fn bind_item_component_box(
+    pub fn bind_item_component_box_name(
         &mut self,
         comp: Box<dyn CustomItemComponent<Error = ItemError, UserState = UserState>>,
         id: String,
@@ -153,19 +177,17 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
         unsafe {
             let cell = UnsafeCell::new(addon);
 
-            let iteration_mut = cell.get().as_mut_unchecked();
-            let pass_addon = cell.get().as_mut_unchecked();
+            let iteration_mut = cell.get().as_mut().unwrap_unchecked();
+            let pass_addon = cell.get().as_mut().unwrap_unchecked();
 
-            for (id, blk) in iteration_mut.blocks_mut_ref().iter_mut() {
-                let blk_ref = blk.get().as_mut_unchecked();
+            for (_, blk) in iteration_mut.blocks_mut_ref().iter_mut() {
                 // Processes basic components
                 {
-                    let component_iter = blk.get().as_mut_unchecked();
-                    let component_ref = &mut blk.get().as_mut_unchecked().components;
+                    let mut component_iter = blk.components.clone();
 
-                    for (component_id, information) in
-                        component_iter.components.non_minecraft_components_mut()
+                    for (component_id, information) in component_iter.non_minecraft_components_mut()
                     {
+                        let mut component_ref = blk.components.clone();
                         if let Some(func) = self.block_components.get_mut(component_id) {
                             let base = information
                                 .as_any()
@@ -174,24 +196,24 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
 
                             func.apply_component(
                                 &base.data,
-                                blk_ref,
-                                component_ref,
+                                blk,
+                                &mut component_ref,
                                 Some(pass_addon),
                                 &mut self.user_state,
                             )?;
                             component_ref.remove_component(component_id);
                         }
+                        blk.components = component_ref;
                     }
                 }
 
                 // Processes permutations
                 {
-                    let permutation_iter = blk.get().as_mut_unchecked();
-                    let components_ref = &mut blk.get().as_mut_unchecked().permutations;
+                    let mut permutation_iter = blk.permutations.clone();
 
-                    for (idx, perm) in permutation_iter.permutations.iter_mut().enumerate() {
-                        let components = &mut perm.components;
-                        let component_ref = &mut components_ref[idx].components;
+                    for (_idx, perm) in permutation_iter.iter_mut().enumerate() {
+                        let mut components = perm.components.clone();
+                        let mut component_ref = perm.components.clone();
 
                         for (component_id, information) in components.non_minecraft_components_mut()
                         {
@@ -203,15 +225,17 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
 
                                 func.apply_component(
                                     &base.data,
-                                    blk_ref,
-                                    component_ref,
+                                    blk,
+                                    &mut component_ref,
                                     Some(pass_addon),
                                     &mut self.user_state,
                                 )?;
-                                component_ref.remove_component(id);
+                                component_ref.remove_component(component_id);
                             }
                         }
+                        perm.components = component_ref;
                     }
+                    blk.permutations = permutation_iter
                 }
             }
 
@@ -223,13 +247,12 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
         unsafe {
             let cell = UnsafeCell::new(addon);
 
-            let iteration_mut = cell.get().as_mut_unchecked();
-            let pass_addon = cell.get().as_mut_unchecked();
+            let iteration_mut = cell.get().as_mut().unwrap_unchecked();
+            let pass_addon = cell.get().as_mut().unwrap_unchecked();
 
             for (id, item) in iteration_mut.items_mut_ref().iter_mut() {
-                let item_ref = item.get().as_mut_unchecked();
-                let pass_ref = &mut item.get().as_mut_unchecked().components;
-                let components = &mut item.get().as_mut_unchecked().components;
+                let mut pass_ref = item.components.clone();
+                let mut components = item.components.clone();
 
                 for (component_id, information) in components.non_minecraft_components_mut() {
                     if let Some(func) = self.item_components.get_mut(component_id) {
@@ -240,14 +263,15 @@ impl<BlockError: Debug, ItemError: Debug, UserState>
 
                         func.apply_component(
                             &base.data,
-                            item_ref,
-                            pass_ref,
+                            item,
+                            &mut pass_ref,
                             Some(pass_addon),
                             &mut self.user_state,
                         )?;
                         pass_ref.remove_component(id);
                     }
                 }
+                item.components = pass_ref;
             }
             Ok(cell.into_inner())
         }
