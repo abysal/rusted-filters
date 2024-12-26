@@ -166,7 +166,7 @@ impl CustomComponentRegistry {
         component_id: &str,
         owner_id: &str,
         data: serde_json::value::Value,
-    ) -> String {
+    ) -> (String, bool) {
         let blk = &self.block_list;
         if let Some(comp) = blk.get(component_id) {
             self.instance_id += 1;
@@ -182,7 +182,7 @@ impl CustomComponentRegistry {
                 data: data.clone(),
             });
             let ret = format!("{}_{}", component_id, self.instance_id);
-            ret
+            (ret, comp.is_pure_data)
         } else {
             panic!("Component Instance Not Valid")
         }
@@ -193,7 +193,7 @@ impl CustomComponentRegistry {
         component_id: &str,
         owner_id: &str,
         data: serde_json::value::Value,
-    ) -> String {
+    ) -> (String, bool) {
         let blk = &self.item_list;
         if let Some(comp) = blk.get(component_id) {
             self.instance_id += 1;
@@ -209,7 +209,7 @@ impl CustomComponentRegistry {
                 data: data.clone(),
             });
             let ret = format!("{}_{}", component_id, self.instance_id);
-            ret
+            (ret, comp.is_pure_data)
         } else {
             panic!("Component Instance Not Valid")
         }

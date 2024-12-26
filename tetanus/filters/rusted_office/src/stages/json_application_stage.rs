@@ -83,7 +83,7 @@ impl CustomBlockComponent for CustomComponentInstance {
         _: Option<&mut Addon>,
         state: &mut Self::UserState,
     ) -> Result<(), Self::Error> {
-        let r = state.registry.instance_component_block(
+        let (r, skip) = state.registry.instance_component_block(
             self.id(),
             &owner.description.identifier,
             data.clone(),
@@ -93,7 +93,7 @@ impl CustomBlockComponent for CustomComponentInstance {
             .get_component_mut::<MinecraftCustomComponents>("minecraft:custom_components")
         {
             custom.component_ids.push(r);
-        } else {
+        } else if !skip {
             let main_custom = owner
                 .components
                 .get_component_mut_default::<MinecraftCustomComponents>(
@@ -135,11 +135,15 @@ impl CustomItemComponent for CustomComponentInstance {
         _: Option<&mut Addon>,
         state: &mut Self::UserState,
     ) -> Result<(), Self::Error> {
-        let r = state.registry.instance_component_item(
+        let (r, skip)  = state.registry.instance_component_item(
             self.id(),
             &owner.description.identifier,
             data.clone(),
         );
+
+        if skip {
+            return Ok(());
+        }
 
         let custom = component_context
             .get_component_mut_default::<MinecraftCustomComponents>("minecraft:custom_components")
