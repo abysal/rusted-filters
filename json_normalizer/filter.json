@@ -1,0 +1,16 @@
+{
+  "description": "This is the main filter dispatcher for the rusted collection of filters",
+  "filters": [
+    {
+      "command": "cargo run --manifest-path \"$Env:FILTER_DIR/Cargo.toml\" --release -- ",
+      "runWith": "shell",
+      "when": "os == 'windows'"
+    },
+    {
+      "command": "cargo run --manifest-path \"$FILTER_DIR/Cargo.toml\" --release -- ",
+      "runWith": "shell",
+      "when": "os == 'linux'"
+    }
+  ],
+  "version": "1.0.0"
+}
