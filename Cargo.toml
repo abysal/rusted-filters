@@ -7,4 +7,4 @@ edition = "2021"
 
 
 [workspace]
-members = ["tetanus/crates/*", "tetanus/filters/*", "tetanus"]
+members = ["tetanus/crates/*", "tetanus/filters/*", "tetanus", "json_normalizer"]

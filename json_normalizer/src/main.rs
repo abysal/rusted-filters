@@ -1,4 +1,6 @@
+use anyhow::Context;
 use clap::Parser;
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use serde_hjson::Value;
 use std::fs::File;
 use std::io::BufWriter;
@@ -37,6 +39,8 @@ fn main() {
     walkdir::WalkDir::new(path)
         .into_iter()
         .filter_map(Result::ok)
+        .collect::<Vec<_>>()
+        .into_par_iter()
         .try_for_each(|entry| {
             if !entry.metadata().unwrap().is_file() {
                 return Ok::<(), anyhow::Error>(());
@@ -52,9 +56,15 @@ fn main() {
                 return Ok::<(), anyhow::Error>(());
             }
 
-            let str = std::fs::read_to_string(entry.path())?;
+            let str = std::fs::read_to_string(entry.path())
+                .context(format!("{}", entry.path().display()))?;
 
-            let value: Value = serde_hjson::from_str(&str)?;
+            if str.is_empty() {
+                return Ok::<(), anyhow::Error>(());
+            }
+
+            let value: Value =
+                serde_hjson::from_str(&str).context(format!("{}", entry.path().display()))?;
 
             write_json_to_file(&value, entry.path()).unwrap();
             Ok(())
