@@ -21,7 +21,15 @@ struct NormalizerConfig {
 }
 
 fn write_json_to_file(value: &Value, path: &Path) -> std::io::Result<()> {
-    let file = File::create(path)?;
+    let file = if path.extension() == Some(std::ffi::OsStr::new("hjson")) {
+        File::open({
+            let mut buf = path.to_path_buf();
+            buf.set_extension("json");
+            buf
+        })?
+    } else {
+        File::create(path)?
+    };
     let writer = BufWriter::new(file);
     serde_json::to_writer(writer, value)?;
     Ok(())
