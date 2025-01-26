@@ -1,5 +1,5 @@
 {
-  "description": "This is the main filter dispatcher for the rusted collection of filters",
+  "description": "Normalizes jsonc and hjson into valid json! This uses all system threads (this can be configured) to make this process even faster!",
   "filters": [
     {
       "command": "cargo run --manifest-path \"$Env:FILTER_DIR/Cargo.toml\" --release -- ",
