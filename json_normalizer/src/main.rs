@@ -22,7 +22,7 @@ struct NormalizerConfig {
 
 fn write_json_to_file(value: &Value, path: &Path) -> std::io::Result<()> {
     let file = if path.extension() == Some(std::ffi::OsStr::new("hjson")) {
-        File::open({
+        File::create({
             let mut buf = path.to_path_buf();
             buf.set_extension("json");
             buf
