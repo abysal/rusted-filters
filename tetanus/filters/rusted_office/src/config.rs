@@ -25,7 +25,7 @@ impl Default for ExposedOfficeConfig {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct OfficeConfig {
     pub parsed_config: ExposedOfficeConfig,
     pub script_entry: String,

@@ -76,7 +76,7 @@ fn get_config() -> Result<TetanusConfig, serde_json::Error> {
     let s = std::env::args().collect::<Vec<_>>();
     let idx = s.len() - 1;
     if let Some(v) = s.get(idx) {
-        Ok(serde_json::from_str(v).unwrap_or(serde_json::from_str("{}")?))
+        Ok(serde_json::from_str(v).unwrap_or(serde_json::from_str("{}").unwrap()))
     } else {
         serde_json::from_str("{}")
     }
@@ -89,7 +89,7 @@ fn apply_rotation(addon: Addon) -> Addon {
         );
 
     processor.bind_block_component(Rotation);
-
+    
     processor
         .process_addon(addon)
         .expect("Failed to apply rotations!")
@@ -128,7 +128,16 @@ fn main() {
     }
 
     if conf.enable_office {
+        let old_wd = std::env::current_dir().unwrap();
+        std::env::set_current_dir(
+            Path::new(&conf.base_path)
+                .canonicalize()
+                .expect("Base path does not exist!"),
+        )
+        .expect("Failed to change into the addon directory");
         addon = apply_office(addon, &conf);
+
+        std::env::set_current_dir(&old_wd).expect("Failed to change into the old directory");
     }
 
     addon.write().unwrap()

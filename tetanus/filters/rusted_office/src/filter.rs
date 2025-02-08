@@ -20,6 +20,7 @@ pub enum OfficeError {
     FileError(#[from] std::io::Error),
 }
 
+#[derive(Debug)]
 pub struct RustedOffice {
     pub config: OfficeConfig,
 }

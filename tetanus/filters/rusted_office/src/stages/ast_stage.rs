@@ -109,11 +109,9 @@ impl ASTStage {
             StringInput::new(source, BytePos(0), BytePos((source.len() - 1) as u32)),
             Some(&comments),
         );
-
         let module = parser
-            .parse_program()
-            .map_err(|e| ASTError::ModuleError(e))?
-            .expect_module();
+            .parse_module()
+            .map_err(|e| ASTError::ModuleError(e))?;
 
         Ok(Some((module, comments)))
     }
