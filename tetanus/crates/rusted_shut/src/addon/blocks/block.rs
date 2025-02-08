@@ -1,9 +1,11 @@
 use crate::addon::blocks::permutation::Permutation;
 use crate::addon::component::{ComponentError, FormattedComponentRegister};
 use crate::addon::component_store::ComponentStore;
+use crate::addon::components::custom_components::MinecraftDisplayNameBlock;
 use crate::addon::menu_category::MenuCategory;
 use crate::addon::state::StateData;
 use crate::addon::traits::FormattedJsonSerialize;
+use crate::addon::translation::translation_service::TranslationManager;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -75,6 +77,15 @@ impl Block {
             }
         }
         true
+    }
+
+    pub fn get_translation(&self) -> String {
+        self.components
+            .get_component::<MinecraftDisplayNameBlock>("minecraft:display_name")
+            .unwrap_or(MinecraftDisplayNameBlock(
+                TranslationManager::key_for_block(self),
+            ))
+            .0
     }
 }
 

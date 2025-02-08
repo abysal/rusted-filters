@@ -1,7 +1,9 @@
 use crate::addon::component::{ComponentError, FormattedComponentRegister};
 use crate::addon::component_store::ComponentStore;
+use crate::addon::components::custom_components::MinecraftDisplayNameItem;
 use crate::addon::menu_category::MenuCategory;
 use crate::addon::traits::FormattedJsonSerialize;
+use crate::addon::translation::translation_service::TranslationManager;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -25,6 +27,15 @@ pub struct Item {
 impl Item {
     pub fn is_bland(&self) -> bool {
         !self.components.contains_non_minecraft()
+    }
+
+    pub fn get_translation(&self) -> String {
+        self.components
+            .get_component::<MinecraftDisplayNameItem>("minecraft:display_name")
+            .unwrap_or(MinecraftDisplayNameItem {
+                value: TranslationManager::key_for_item(self),
+            })
+            .value
     }
 }
 

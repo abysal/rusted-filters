@@ -1,4 +1,6 @@
-use crate::addon::components::custom_components::MinecraftCustomComponents;
+use crate::addon::components::custom_components::{
+    MinecraftCustomComponents, MinecraftDisplayNameBlock, MinecraftDisplayNameItem,
+};
 use crate::addon::traits::JsonSerialize;
 use semver::Version;
 use serde_json::Value;
@@ -99,6 +101,9 @@ impl FormattedComponentRegister {
         self_data.bind_component::<MinecraftCustomComponents>(VersionRestriction::Min(
             Version::new(1, 21, 0),
         ));
+        self_data.bind_component::<MinecraftDisplayNameBlock>(VersionRestriction::Min(
+            Version::new(1, 19, 60),
+        ));
         self_data
     }
 
@@ -106,6 +111,9 @@ impl FormattedComponentRegister {
         let mut self_data = Self::new();
         self_data.bind_component::<MinecraftCustomComponents>(VersionRestriction::Min(
             Version::new(1, 21, 0),
+        ));
+        self_data.bind_component::<MinecraftDisplayNameItem>(VersionRestriction::Min(
+            Version::new(1, 19, 60),
         ));
         self_data
     }

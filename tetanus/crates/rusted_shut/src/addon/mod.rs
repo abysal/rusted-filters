@@ -10,3 +10,4 @@ pub mod menu_category;
 pub mod path_resolver;
 pub mod state;
 pub mod traits;
+mod translation;
