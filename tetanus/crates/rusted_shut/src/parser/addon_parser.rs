@@ -9,6 +9,7 @@ use bon::Builder;
 use semver::Version;
 use serde_json::Value;
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 use walkdir::WalkDir;
@@ -149,7 +150,11 @@ impl AddonParser {
                 let e = e.ok();
                 if let Some(e) = e {
                     if e.file_type().is_file() {
-                        Some(e)
+                        if e.path().extension() != Some(OsStr::new("json")) {
+                            None
+                        } else {
+                            Some(e)
+                        }
                     } else {
                         None
                     }
@@ -206,7 +211,11 @@ impl AddonParser {
                 let e = e.ok();
                 if let Some(e) = e {
                     if e.file_type().is_file() {
-                        Some(e)
+                        if e.path().extension() != Some(OsStr::new("json")) {
+                            None
+                        } else {
+                            Some(e)
+                        }
                     } else {
                         None
                     }
