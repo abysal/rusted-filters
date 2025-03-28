@@ -1,5 +1,5 @@
 use crate::addon::components::custom_components::{
-    MinecraftCustomComponents, MinecraftDisplayNameBlock, MinecraftDisplayNameItem,
+    MinecraftCustomComponents,
 };
 use crate::addon::traits::JsonSerialize;
 use semver::Version;
