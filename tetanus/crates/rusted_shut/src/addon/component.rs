@@ -101,9 +101,9 @@ impl FormattedComponentRegister {
         self_data.bind_component::<MinecraftCustomComponents>(VersionRestriction::Min(
             Version::new(1, 21, 0),
         ));
-        self_data.bind_component::<MinecraftDisplayNameBlock>(VersionRestriction::Min(
-            Version::new(1, 19, 60),
-        ));
+        // self_data.bind_component::<MinecraftDisplayNameBlock>(VersionRestriction::Min(
+        //     Version::new(1, 19, 60),
+        // ));
         self_data
     }
 
@@ -112,9 +112,9 @@ impl FormattedComponentRegister {
         self_data.bind_component::<MinecraftCustomComponents>(VersionRestriction::Min(
             Version::new(1, 21, 0),
         ));
-        self_data.bind_component::<MinecraftDisplayNameItem>(VersionRestriction::Min(
-            Version::new(1, 19, 60),
-        ));
+        // self_data.bind_component::<MinecraftDisplayNameItem>(VersionRestriction::Min(
+        //     Version::new(1, 19, 60),
+        // ));
         self_data
     }
 
