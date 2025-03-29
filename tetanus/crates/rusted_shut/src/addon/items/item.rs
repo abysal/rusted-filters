@@ -13,8 +13,6 @@ pub struct ItemDescription {
     pub identifier: String,
     #[serde(default)]
     pub menu_category: MenuCategory,
-    #[serde(default)]
-    pub is_experimental: bool,
 }
 
 #[derive(Debug)]
