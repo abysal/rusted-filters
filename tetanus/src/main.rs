@@ -44,7 +44,7 @@ fn false_func() -> bool {
 struct TetanusConfig {
     #[serde(default = "true_func")]
     enable_rotation_filter: bool,
-    #[serde(default = "true_func")]
+    #[serde(default = "false_func")]
     enable_office: bool,
     #[serde(default = "default_rp")]
     rp_path: String,
@@ -89,7 +89,7 @@ fn apply_rotation(addon: Addon) -> Addon {
         );
 
     processor.bind_block_component(Rotation);
-    
+
     processor
         .process_addon(addon)
         .expect("Failed to apply rotations!")
